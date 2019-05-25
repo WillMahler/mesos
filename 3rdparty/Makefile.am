@@ -515,6 +515,9 @@ $(LIB_GRPC): $(GRPC)-build-stamp
 # because Mesos is not aware of the library; see MESOS-9505. If bundle c-ares
 # to resolve MESOS-9338 in the future, we should remove `HAS_SYSTEM_CARES` below
 # and set up proper include and linker flags instead.
+#
+# NOTE: Upgrading protobuf to 3.7.x breaks the grpc build, see MESOS-9755
+# for more details. To resolve it, -pthread was added to the LDFLAGS.
 $(GRPC)-build-stamp: $(GRPC)-stamp			\
                      $(PROTOBUF)-build-stamp
 	cd $(GRPC) &&					\
@@ -534,6 +537,7 @@ $(GRPC)-build-stamp: $(GRPC)-stamp			\
 	    LDFLAGS="$(PROTOBUF_LINKER_FLAGS)		\
 	             $(SSL_LINKER_FLAGS)		\
 	             $(ZLIB_LINKER_FLAGS)		\
+	             -pthread				\
 	             $(LDFLAGS)"			\
 	    LDLIBS="$(LDLIBS)"				\
 	    HAS_PKG_CONFIG=false			\
