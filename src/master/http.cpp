@@ -1457,8 +1457,11 @@ Future<Response> Master::Http::getState(
 
           *response.mutable_get_state() = _getState(approvers);
 
+          google::protobuf::Arena arena;
+
           return OK(
-              serialize(contentType, evolve(response)), stringify(contentType));
+              serialize(contentType, *evolve(response, &arena)),
+              stringify(contentType));
         }));
 }
 

@@ -153,6 +153,9 @@ v1::executor::Event evolve(const StatusUpdateAcknowledgementMessage& message);
 
 v1::master::Event evolve(const mesos::master::Event& event);
 v1::master::Response evolve(const mesos::master::Response& response);
+v1::master::Response* evolve(
+    const mesos::master::Response& response,
+    google::protobuf::Arena* arena);
 
 
 // Before the v1 API we had REST endpoints that returned JSON. The JSON was not

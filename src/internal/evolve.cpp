@@ -14,6 +14,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include <google/protobuf/arena.h>
+
 #include <mesos/agent/agent.hpp>
 
 #include <mesos/master/master.hpp>
@@ -62,6 +64,34 @@ static T evolve(const google::protobuf::Message& message)
   // be set and we don't want an exception to get thrown.
   CHECK(t.ParsePartialFromString(data))
     << "Failed to parse " << t.GetTypeName()
+    << " while evolving from " << message.GetTypeName();
+
+  return t;
+}
+
+// Helper for evolving a type by serializing/parsing when the types
+// have not changed across versions.
+template <typename T>
+static T* evolve(
+    const google::protobuf::Message& message,
+    google::protobuf::Arena* arena)
+{
+  T* t = google::protobuf::Arena::CreateMessage<T>(arena);
+
+  string data;
+
+  // NOTE: We need to use 'SerializePartialToString' instead of
+  // 'SerializeToString' because some required fields might not be set
+  // and we don't want an exception to get thrown.
+  CHECK(message.SerializePartialToString(&data))
+    << "Failed to serialize " << message.GetTypeName()
+    << " while evolving to " << t->GetTypeName();
+
+  // NOTE: We need to use 'ParsePartialFromString' instead of
+  // 'ParseFromString' because some required fields might not
+  // be set and we don't want an exception to get thrown.
+  CHECK(t->ParsePartialFromString(data))
+    << "Failed to parse " << t->GetTypeName()
     << " while evolving from " << message.GetTypeName();
 
   return t;
@@ -262,6 +292,14 @@ v1::maintenance::Schedule evolve(const maintenance::Schedule& schedule)
 v1::master::Response evolve(const mesos::master::Response& response)
 {
   return evolve<v1::master::Response>(response);
+}
+
+
+v1::master::Response* evolve(
+    const mesos::master::Response& response,
+    google::protobuf::Arena* arena)
+{
+  return evolve<v1::master::Response>(response, arena);
 }
 
 
